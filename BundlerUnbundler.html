@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mac System 7 File Bundler and Unbundler 1.0</title>
+  <link rel="stylesheet" href="css/normalize.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <style>
+    /* Override: show the windows */
+    .window {
+      display: block !important;
+      position: static;
+      margin: 20px;
+      min-height: 700px;
+      max-height: none;
+      overflow: auto;
+    }
+    body {
+      background-color: #B3B3DA;
+      font-family: 'Chicago', sans-serif;
+      font-size: 11px;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+      gap: 20px;
+      padding-top: 30px; /* to avoid overlap with fixed header */
+    }
+    .window-container {
+      max-width: 600px;
+      min-width: 300px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Menu bar adjustments */
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 20px;
+      background-color: #000;
+      line-height: 19px;
+      z-index: 999;
+      display: block;
+    }
+    header > .container {
+      width: 100%;
+      height: 19px;
+      line-height: 19px;
+      font-size: 11px;
+      font-family: 'Chicago', sans-serif;
+      margin: 0;
+      background-color: #fff;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+    nav.menu {
+      display: flex;
+      align-items: center;
+    }
+    nav.menu ul {
+      padding: 0;
+      margin: 0;
+      display: flex;
+      list-style: none;
+    }
+    nav.menu ul li {
+      display: inline-block;
+      margin-right: 12px;
+      user-select: none;
+    }
+    nav.menu ul li a {
+      color: #000;
+      text-decoration: none;
+      font-weight: normal;
+      padding: 0 4px;
+      cursor: pointer;
+    }
+    nav.menu ul li.disabled a {
+      color: #848484;
+      cursor: default;
+    }
+    nav.menu ul li img.icon {
+      height: 19px;
+      width: 19px;
+      vertical-align: middle;
+      margin-right: 8px;
+      user-select: none;
+    }
+    /* Status area styling */
+    .status-area {
+      background-color: #e0e0f0;
+      border: 1px solid #888;
+      color: #333;
+      font-family: 'Chicago', sans-serif;
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+      min-height: 20px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 100px;
+    }
+    /* Form elements spacing */
+    form > div, form > fieldset {
+      margin-bottom: 1em;
+    }
+    /* Buttons container */
+    .button-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 1.5em;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav class="menu">
+        <ul>
+          <li><a href="#"><img src="img/header_apple.png" class="icon" alt="Apple Icon" /></a></li>
+          <li><a href="#" id="menu-file-bundler">File Bundler</a></li>
+          <li><a href="#" id="menu-file-unbundler">File Unbundler</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- File Bundler App -->
+  <div class="window window-focus window-container" id="app-file-bundler">
+    <div class="window-title">
+      <span class="title">File Bundler</span>
+    </div>
+    <div class="window-body">
+      <form id="bundler-form">
+        <div>
+          <label for="file-input">Select Directory:</label>
+          <input type="file" id="file-input" webkitdirectory multiple />
+        </div>
+
+        <div>
+          <label for="output-textarea">Bundled Markdown Output:</label>
+          <textarea id="output-textarea" rows="15" style="width: 100%; box-sizing: border-box;" placeholder="Bundled markdown will appear here..."></textarea>
+        </div>
+
+        <div>
+          <label for="bundle-filename">Output Filename:</label>
+          <input type="text" id="bundle-filename" value="project_bundle.md" style="width: 100%; box-sizing: border-box;" />
+        </div>
+
+        <div class="button-row">
+          <button type="button" id="download-bundle" disabled>Download Bundle</button>
+        </div>
+
+        <div class="status-area" id="bundler-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- File Unbundler App -->
+  <div class="window window-focus window-container" id="app-file-unbundler">
+    <div class="window-title">
+      <span class="title">File Unbundler</span>
+    </div>
+    <div class="window-body">
+      <form id="unbundler-form">
+        <div>
+          <label for="markdown-file-input">Select Markdown Bundle File:</label>
+          <input type="file" id="markdown-file-input" accept=".md,.txt" />
+        </div>
+
+        <div>
+          <label for="zip-filename">Output ZIP Filename:</label>
+          <input type="text" id="zip-filename" value="unbundled_project.zip" style="width: 100%; box-sizing: border-box;" />
+        </div>
+
+        <div>
+          <label><input type="checkbox" id="validate-checkbox" checked /> Validate Markdown before unbundling</label>
+        </div>
+
+        <div class="button-row">
+          <button type="button" id="process-unbundle" disabled>Process and Download ZIP</button>
+        </div>
+
+        <div class="status-area" id="unbundler-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Focus first control on menu click
+    document.getElementById('menu-file-bundler').addEventListener('click', e => {
+      e.preventDefault();
+      const app = document.getElementById('app-file-bundler');
+      const firstControl = app.querySelector('input, select, textarea, button:not([disabled])');
+      if (firstControl) firstControl.focus();
+    });
+    document.getElementById('menu-file-unbundler').addEventListener('click', e => {
+      e.preventDefault();
+      const app = document.getElementById('app-file-unbundler');
+      const firstControl = app.querySelector('input, select, textarea, button:not([disabled])');
+      if (firstControl) firstControl.focus();
+    });
+
+    // File Bundler Logic
+    const fileInput = document.getElementById('file-input');
+    const outputTextarea = document.getElementById('output-textarea');
+    const downloadBundleBtn = document.getElementById('download-bundle');
+    const bundleFilenameInput = document.getElementById('bundle-filename');
+    const bundlerStatus = document.getElementById('bundler-status');
+
+    fileInput.addEventListener('change', () => {
+      bundlerStatus.textContent = 'Processing files...';
+      const files = Array.from(fileInput.files);
+      if (files.length === 0) {
+        outputTextarea.value = '';
+        downloadBundleBtn.disabled = true;
+        bundlerStatus.textContent = 'No files selected.';
+        return;
+      }
+
+      // Sort files by relative path for consistent output
+      files.sort((a, b) => a.webkitRelativePath.localeCompare(b.webkitRelativePath));
+
+      // Read files asynchronously and build markdown
+      const readFilePromises = files.map(file => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            resolve({ path: file.webkitRelativePath, content: reader.result });
+          };
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(file);
+        });
+      });
+
+      Promise.all(readFilePromises).then(results => {
+        let finalMarkdown = '';
+        results.forEach(({ path, content }) => {
+          finalMarkdown += `# --- START FILE: ${path} ---\n${content}\n# --- END FILE: ${path} ---\n\n`;
+        });
+        outputTextarea.value = finalMarkdown;
+        downloadBundleBtn.disabled = false;
+        bundlerStatus.textContent = 'Files bundled successfully.';
+      }).catch(err => {
+        bundlerStatus.textContent = 'Error reading files: ' + err.message;
+        downloadBundleBtn.disabled = true;
+      });
+    });
+
+    downloadBundleBtn.addEventListener('click', () => {
+      const blob = new Blob([outputTextarea.value], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = bundleFilenameInput.value || 'project_bundle.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      bundlerStatus.textContent = 'Download started.';
+    });
+
+    // File Unbundler Logic
+    const markdownFileInput = document.getElementById('markdown-file-input');
+    const zipFilenameInput = document.getElementById('zip-filename');
+    const validateCheckbox = document.getElementById('validate-checkbox');
+    const processUnbundleBtn = document.getElementById('process-unbundle');
+    const unbundlerStatus = document.getElementById('unbundler-status');
+
+    markdownFileInput.addEventListener('change', () => {
+      if (markdownFileInput.files.length === 1) {
+        processUnbundleBtn.disabled = false;
+        unbundlerStatus.textContent = '';
+      } else {
+        processUnbundleBtn.disabled = true;
+        unbundlerStatus.textContent = 'Please select a single Markdown bundle file.';
+      }
+    });
+
+    processUnbundleBtn.addEventListener('click', () => {
+      if (markdownFileInput.files.length !== 1) {
+        unbundlerStatus.textContent = 'No Markdown file selected.';
+        return;
+      }
+
+      const file = markdownFileInput.files[0];
+      const reader = new FileReader();
+      unbundlerStatus.textContent = 'Reading file...';
+      processUnbundleBtn.disabled = true;
+
+      reader.onload = () => {
+        const text = reader.result;
+        unbundlerStatus.textContent = 'Parsing file...';
+
+        // Parse files from markdown
+        const files = [];
+        const regex = /# --- START FILE: (.+?) ---\n([\s\S]*?)# --- END FILE: \1 ---/g;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          files.push({ path: match[1], content: match[2].replace(/\r?\n$/, '') });
+        }
+
+        if (validateCheckbox.checked) {
+          if (files.length === 0) {
+            unbundlerStatus.textContent = 'No valid files found in the Markdown bundle.';
+            processUnbundleBtn.disabled = false;
+            return;
+          }
+        }
+
+        unbundlerStatus.textContent = 'Generating ZIP...';
+        const zip = new JSZip();
+        files.forEach(f => {
+          zip.file(f.path, f.content);
+        });
+
+        zip.generateAsync({ type: 'blob' }).then(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = zipFilenameInput.value || 'unbundled_project.zip';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          unbundlerStatus.textContent = 'Download ready!';
+          processUnbundleBtn.disabled = false;
+        }).catch(err => {
+          unbundlerStatus.textContent = 'Error generating ZIP: ' + err.message;
+          processUnbundleBtn.disabled = false;
+        });
+      };
+
+      reader.onerror = () => {
+        unbundlerStatus.textContent = 'Error reading file.';
+        processUnbundleBtn.disabled = false;
+      };
+
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
