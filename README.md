@@ -28,10 +28,8 @@
 ## Installation & Usage
 
 1. **Clone or Download:**
-   - Download the repository as a ZIP or clone it using:
-     ```
-     git clone https://github.com/yourusername/mac-system7-bundler-unbundler.git
-     ```
+   - Download the repository as a ZIP or clone it.
+   
 2. **File Structure:**
    - Place all files in a single directory, preserving the folder structure (especially for CSS, fonts, and images).
 
