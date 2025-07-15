@@ -52,35 +52,6 @@ MIT
 
 ## About
 
-This project uses advanced front-end engineering skills, including DOM manipulation, file handling, and custom UI theming, using only native web technologies.  
+This project uses advanced front-end skills, including DOM manipulation, file handling, and custom UI theming, using only native web technologies.  
 If you are a recruiter or hiring manager, you can review the full source code in this repository to evaluate my proficiency in modern HTML, CSS, and JavaScript.
 
----
-
-## Files to Upload to GitHub
-
-To make your project complete and functional for others, upload the following files and folders:
-
-- `BundlerUnbundler.html` (main app)
-- `css/normalize.css` (CSS reset)
-- `css/layout.css` (Mac System 7 theme)
-- `fonts/` (Chicago and MonoLisa-Regular font files)
-- `img/` (Apple icon, window title bar backgrounds, and any other UI images)
-- `README.md` (this file)
-- `LICENSE` (optional, but recommended; for MIT, you can use [this template](https://opensource.org/license/mit/))
-
-**Folder structure example:**
-```
-/
-├── BundlerUnbundler.html
-├── README.md
-├── LICENSE
-├── css/
-│   ├── normalize.css
-│   └── layout.css
-├── fonts/
-│   ├── ChicagoFLF.ttf
-├── img/
-│   ├── header_apple.png
-│   └── window_titlebg.png
-```
